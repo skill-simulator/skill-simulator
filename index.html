@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>スキルシミュレータ</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    h2 { margin-top: 24px; }
+    .block { border: 1px solid #ccc; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+    .row { display: flex; gap: 8px; margin-bottom: 8px; }
+    input[type="number"] { width: 80px; }
+  </style>
+</head>
+<body>
+  <h1>スキルシミュレータ</h1>
+
+  <label>レアリティ：
+    <select id="rarity">
+      <option value="LR">LR</option>
+      <option value="UR">UR</option>
+      <option value="HR">HR</option>
+      <option value="R">R</option>
+      <option value="HN">HN</option>
+    </select>
+  </label>
+
+  <div class="block">
+    <h2>A 名前スペース</h2>
+    <div id="A-skill">
+      <div class="row">
+        <input placeholder="スキル名" class="sname"> <input type="number" min="1" max="5" class="slv" placeholder="Lv">
+        <input placeholder="スキル名" class="sname"> <input type="number" min="1" max="5" class="slv" placeholder="Lv">
+      </div>
+      <div class="row">
+        <input placeholder="スキル名" class="sname"> <input type="number" min="1" max="5" class="slv" placeholder="Lv">
+        <input placeholder="スキル名" class="sname"> <input type="number" min="1" max="5" class="slv" placeholder="Lv">
+      </div>
+      <div class="row">
+        <input placeholder="スキル名" class="sname"> <input type="number" min="1" max="5" class="slv" placeholder="Lv">
+        <input placeholder="スキル名" class="sname"> <input type="number" min="1" max="5" class="slv" placeholder="Lv">
+      </div>
+      <div class="row">
+        <input placeholder="スキル名" class="sname"> <input type="number" min="1" max="5" class="slv" placeholder="Lv">
+        <input placeholder="スキル名" class="sname"> <input type="number" min="1" max="5" class="slv" placeholder="Lv">
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <h2>B 名前スペース</h2>
+    <div id="B-skill">
+      <div class="row">
+        <input placeholder="スキル名" class="sname"> <input type="number" min="1" max="5" class="slv" placeholder="Lv">
+        <input placeholder="スキル名" class="sname"> <input type="number" min="1" max="5" class="slv" placeholder="Lv">
+      </div>
+      <div class="row">
+        <input placeholder="スキル名" class="sname"> <input type="number" min="1" max="5" class="slv" placeholder="Lv">
+        <input placeholder="スキル名" class="sname"> <input type="number" min="1" max="5" class="slv" placeholder="Lv">
+      </div>
+      <div class="row">
+        <input placeholder="スキル名" class="sname"> <input type="number" min="1" max="5" class="slv" placeholder="Lv">
+        <input placeholder="スキル名" class="sname"> <input type="number" min="1" max="5" class="slv" placeholder="Lv">
+      </div>
+      <div class="row">
+        <input placeholder="スキル名" class="sname"> <input type="number" min="1" max="5" class="slv" placeholder="Lv">
+        <input placeholder="スキル名" class="sname"> <input type="number" min="1" max="5" class="slv" placeholder="Lv">
+      </div>
+    </div>
+  </div>
+
+  <button id="run">抽選する</button>
+  <h2>結果</h2>
+  <pre id="result"></pre>
+
+<script>
+  function getPickCount(r) {
+    if (r === "LR" || r === "UR") return 8;
+    if (r === "HR") return 6;
+    if (r === "R") return 4;
+    return 2; // HN
+  }
+
+  function gatherSkills(blockId) {
+    const block = document.getElementById(blockId);
+    const names = block.querySelectorAll('.sname');
+    const levels = block.querySelectorAll('.slv');
+    const arr = [];
+    for (let i = 0; i < names.length; i++) {
+      const n = names[i].value.trim();
+      const lv = Number(levels[i].value);
+      if (n && lv) arr.push({ name: n, lv });
+    }
+    return arr;
+  }
+
+  function chooseOne(arr) {
+    return arr[Math.floor(Math.random()*arr.length)];
+  }
+
+  document.getElementById('run').onclick = () => {
+    const rarity = document.getElementById('rarity').value;
+    const pickCount = getPickCount(rarity);
+
+    const A = gatherSkills('A-skill');
+    const B = gatherSkills('B-skill');
+
+    // Lv3-4から必ず1つ
+    const pool34 = [...A, ...B].filter(s => s.lv === 3 || s.lv === 4);
+    if (pool34.length === 0) {
+      document.getElementById('result').textContent = 'Lv3-4 がありません。';
+      return;
+    }
+
+    const result = [];
+    result.push(chooseOne(pool34));
+
+    // 残りを A右上 → B右上 の順の候補から (実装は単純にA→B順)
+    const pool = [...A, ...B];
+    while (result.length < pickCount && pool.length > 0) {
+      const pick = chooseOne(pool);
+      result.push(pick);
+      const idx = pool.indexOf(pick);
+      if (idx >= 0) pool.splice(idx,1);
+    }
+
+    document.getElementById('result').textContent = result.map(s => `${s.name} (Lv${s.lv})`).join('\n');
+  };
+</script>
+
+</body>
+</html>
