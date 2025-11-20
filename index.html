@@ -118,10 +118,10 @@
       font-size: 24px;
     }
     .skill-block.father h2::before {
-      content: '🐴';
+      content: '👨';
     }
     .skill-block.mother h2::before {
-      content: '🐴';
+      content: '👩';
     }
 
     .skill-row {
@@ -390,7 +390,7 @@
     for (let i = 0; i < names.length; i++) {
       const n = names[i].value.trim();
       const lv = Number(levels[i].value);
-      if (n && lv) arr.push({ name: n, lv });
+      if (n && lv) arr.push({ name: n, lv, id: `${n}-${lv}` });
     }
     return arr;
   }
@@ -424,28 +424,41 @@
     }
 
     const result = [firstPick];
-    const usedSkills = [firstPick];
+    const pickedSkillIds = new Set([firstPick.id]);
 
-    const poolA = A.filter(s => !usedSkills.includes(s));
-    const poolB = B.filter(s => !usedSkills.includes(s));
+    const poolA = A.filter(s => s.id !== firstPick.id);
+    const poolB = B.filter(s => s.id !== firstPick.id);
 
-    while (result.length < pickCount) {
+    let pickCount_remaining = pickCount - 1;
+    let useA = true;
+
+    while (pickCount_remaining > 0) {
       let picked = false;
 
-      if (poolA.length > 0) {
-        const pick = chooseOne(poolA);
-        result.push(pick);
-        usedSkills.push(pick);
-        poolA.splice(poolA.indexOf(pick), 1);
-        picked = true;
-      }
-
-      if (result.length < pickCount && poolB.length > 0) {
-        const pick = chooseOne(poolB);
-        result.push(pick);
-        usedSkills.push(pick);
-        poolB.splice(poolB.indexOf(pick), 1);
-        picked = true;
+      if (useA) {
+        if (poolA.length > 0) {
+          const pick = chooseOne(poolA);
+          if (!pickedSkillIds.has(pick.id)) {
+            result.push(pick);
+            pickedSkillIds.add(pick.id);
+          }
+          poolA.splice(poolA.indexOf(pick), 1);
+          pickCount_remaining--;
+          picked = true;
+        }
+        useA = false;
+      } else {
+        if (poolB.length > 0) {
+          const pick = chooseOne(poolB);
+          if (!pickedSkillIds.has(pick.id)) {
+            result.push(pick);
+            pickedSkillIds.add(pick.id);
+          }
+          poolB.splice(poolB.indexOf(pick), 1);
+          pickCount_remaining--;
+          picked = true;
+        }
+        useA = true;
       }
 
       if (!picked) break;
